@@ -3,6 +3,7 @@ from statsmodels.tsa.stattools import adfuller
 from matplotlib import pyplot as plt
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+import statsmodels.api as sm
 
 df = pd.read_csv('Enrollments Forecasting - enrollments.csv')
 # df = pd.read_csv('Enrollments Forecasting - enrollments overall.csv')
@@ -37,3 +38,37 @@ plt.show()
 
 plot_acf(ts)
 plt.show()
+
+# rank AIC and BIC
+
+order_aic_bic = []
+
+# Loop over p values from 0-4
+for p in range(5):
+    # Loop over q values from 0-4
+    for q in range(5):
+
+        try:
+            # create and fit ARMA(p,q) model
+            model = sm.tsa.statespace.SARIMAX(ts, order=(p, 1, q))
+            results = model.fit()
+
+            # Print order and results
+            order_aic_bic.append((p, q, results.aic, results.bic))
+        except:
+            print(p, q, None, None)
+
+# Make DataFrame of model order and AIC/BIC scores
+order_df = pd.DataFrame(order_aic_bic, columns=['p', 'q', 'aic', 'bic'])
+
+# lets sort them by AIC and BIC
+
+# Sort by AIC
+print("Models sorted by AIC ")
+print("\n")
+print(order_df.sort_values('aic').reset_index(drop=True))
+
+# Sort by BIC
+print("Models sorted by BIC ")
+print("\n")
+print(order_df.sort_values('bic').reset_index(drop=True))
